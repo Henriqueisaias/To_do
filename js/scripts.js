@@ -14,7 +14,7 @@ const filterBtn = document.querySelector("#filter-select");
 let oldInput;
 // funções
 
-function saveTodo(text) {
+function saveTodo(text, done = 0, save = 1) {
   // criação da estrutura html do template de nota
 
   // criação da div
@@ -54,6 +54,16 @@ function saveTodo(text) {
   todo.appendChild(editbtn);
   todo.appendChild(removebtn);
 
+  // local storage
+
+  if (done) {
+    todo.classList.add("done");
+  }
+
+  if (save) {
+    saveTodoLocalStorage({ text, done });
+  }
+
   // append de todo na div
   todoList.appendChild(todo);
   // reset do input
@@ -76,6 +86,8 @@ function updateTodo(text) {
 
     if (todoTitle.innerText === oldInput) {
       todoTitle.innerText = text;
+
+      updateTodoLocalStorage(oldInput, text);
     }
   });
 }
@@ -102,19 +114,26 @@ function filterTodos(filterValue) {
   switch (filterValue) {
     case "all":
       todos.forEach((todo) => (todo.style.display = "flex"));
-      break
+      break;
 
-      case "done":
-      todos.forEach((todo) => todo.classList.contains("done") ? (todo.style.display = "flex") : (todo.style.display = "none"));
-      break
+    case "done":
+      todos.forEach((todo) =>
+        todo.classList.contains("done")
+          ? (todo.style.display = "flex")
+          : (todo.style.display = "none")
+      );
+      break;
 
-      case "todo":
-      todos.forEach((todo) => !todo.classList.contains("done") ? (todo.style.display = "flex") : (todo.style.display = "none"));
-      break
+    case "todo":
+      todos.forEach((todo) =>
+        !todo.classList.contains("done")
+          ? (todo.style.display = "flex")
+          : (todo.style.display = "none")
+      );
+      break;
 
-
-      default:
-        break;
+    default:
+      break;
   }
 }
 
@@ -149,11 +168,14 @@ document.addEventListener("click", (e) => {
   if (tar.classList.contains("finish-todo")) {
     // aternancia da classe
     pai.classList.toggle("done");
+    updateTodoStatusLocalStorage(todoTitle)
   }
 
   if (tar.classList.contains("remove-todo")) {
     // delete da div
+
     pai.remove();
+    removeTodoLocalStorage(todoTitle);
   }
 
   if (tar.classList.contains("edit-todo")) {
@@ -200,3 +222,57 @@ filterBtn.addEventListener("change", (e) => {
 
   filterTodos(filterValue);
 });
+
+const getTodosLocalStorage = () => {
+  const todos = JSON.parse(localStorage.getItem("todos")) || [];
+  return todos;
+};
+
+const loadTodos = () => {
+  const todo = getTodosLocalStorage();
+  todo.forEach((todo) => {
+    saveTodo(todo.text, todo.done, 0);
+  });
+};
+
+const saveTodoLocalStorage = (todo) => {
+  const todos = getTodosLocalStorage();
+
+  todos.push(todo);
+
+  localStorage.setItem("todos", JSON.stringify(todos));
+};
+
+const removeTodoLocalStorage = (todoText) => {
+  const todos = getTodosLocalStorage();
+
+  const filteredTodos = todos.filter((todo) => todo.text !== todoText);
+
+  localStorage.setItem("todos", JSON.stringify(filteredTodos));
+};
+
+const  updateTodoStatusLocalStorage=(todoText)=> {
+
+  const todos = getTodosLocalStorage();
+
+ todos.map((todo) => todo.text === todoText ? todo.done = !todo.done : null);
+
+  localStorage.setItem("todos", JSON.stringify(todos));
+
+
+}
+
+
+const  updateTodoLocalStorage = (todoOldText, todoNewText)=> {
+
+  const todos = getTodosLocalStorage();
+
+ todos.map((todo) => 
+ todo.text === todoOldText ? (todo.text = todoNewText) : null);
+
+  localStorage.setItem("todos", JSON.stringify(todos));
+
+
+}
+
+loadTodos();
